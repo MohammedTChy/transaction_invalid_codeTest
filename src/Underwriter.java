@@ -1,24 +1,56 @@
 import java.util.*;
 
-class MovingAverage {
-private Queue<Integer> queue;
-private int size;
-private double sum;
+class Underwriter {
+  
+  public static String[] identifyInvalidTransactions(String[] transactions) {
+    Map<String, List<String[]>> nameToTransactions = new HashMap<>();
+    List<String> invalidTransactions = new ArrayList<>();
 
-public MovingAverage(Integer N) {
-    queue = new LinkedList<>();
-    size = N;
-    sum = 0.0;
-}
+    for (String transaction : transactions) {
+      String[] fields = transaction.split(",");
+      String name = fields[0];
+      int time = Integer.parseInt(fields[1]);
+      int amount = Integer.parseInt(fields[2]);
+      String city = fields[3];
 
-public Double add(Integer X) {
-    queue.offer(X);
-    sum += X;
+      boolean invalid = amount > 2000;
 
-    if (queue.size() > size) {
-        sum -= queue.poll();
+      if (nameToTransactions.containsKey(name)) {
+        List<String[]> prevTransactions = nameToTransactions.get(name);
+        for (String[] prevTransaction : prevTransactions) {
+          int prevTime = Integer.parseInt(prevTransaction[1]);
+          int prevAmount = Integer.parseInt(prevTransaction[2]);
+          String prevCity = prevTransaction[3];
+
+          if (Math.abs(time - prevTime) <= 60 &&
+              !city.equals(prevCity)) {
+            invalid = true;
+          }
+
+          if (Math.abs(time - prevTime) <= 60 &&
+              amount == prevAmount &&
+              !city.equals(prevCity)) {
+            invalid = true;
+          }
+
+          if (time == prevTime &&
+              amount == prevAmount &&
+              !city.equals(prevCity)) {
+            invalid = true;
+          }
+        }
+      }
+
+      if (invalid) {
+        invalidTransactions.add(transaction);
+      }
+
+      if (!nameToTransactions.containsKey(name)) {
+        nameToTransactions.put(name, new ArrayList<>());
+      }
+      nameToTransactions.get(name).add(fields);
     }
 
-    return sum / queue.size();
-    }
+    return invalidTransactions.toArray(new String[0]);
+  }
 }
